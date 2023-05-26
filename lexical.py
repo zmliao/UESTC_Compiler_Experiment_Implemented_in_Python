@@ -1,13 +1,14 @@
 class LexicalAnalyzer:
-    def __init__(self):
-        self.lines = []  # 输入程序
+    def __init__(self, rerun=False):
+        if rerun is False:
+            self.lines = []  # 输入程序
 
         self.results = []  # 输出字符序列
         self.errors = []  # 输出错误信息
 
         self.state = 0  # 状态
         self.token = ""  # 已读入的字符序列
-        self.cur_line = ""  # 当前行数
+        self.cur_line = 0  # 当前行数
 
         # 存放常量
         self.ITEM_DICT = {"begin": 1,
@@ -52,18 +53,19 @@ class LexicalAnalyzer:
             for error in self.errors:
                 error_line = error[0]
                 error_type = error[1]
-                error_info = ""
                 if error_type == 0:
-                    error_info = "非法字符！"
+                    error_info = "Invalid Symbol！"
                 elif error_type == 1:
-                    error_info = "冒号\":\"后面没有等于号\"=\""
+                    error_info = "Colon\":\" must be followed by\"=\""
                 else:
-                    error_info = f"标识符\"{error[2]}\"长度溢出"
+                    error_info = f"The length of token\"{error[2]}\"exceeds!"
                 error_info = "***LINE:" + str(error_line) + "  " + error_info + "\n"
                 f.write(error_info)
 
+        return len(self.errors) == 0
+
     def run(self):
-        self.cur_line = 0
+        self.__init__(rerun=True)
         for line in self.lines:
             self.cur_line += 1
             for word in line:
@@ -77,6 +79,9 @@ class LexicalAnalyzer:
                     if self.state in [0, 3]:
                         self.token += word
                         self.state = 3
+                    elif self.state == 1:
+                        self.token += word
+                        self.state = 1
                     else:
                         self.__retract_and_reserve(word, 3)
                 elif word == " ":  # 处理空格
@@ -117,14 +122,14 @@ class LexicalAnalyzer:
                     self.__error(0)
         self.__eof()
 
-    def __retract_and_reserve(self, word, next_state): # 回退一字符，处理保留字，然后读入一字符后转入下一状态
+    def __retract_and_reserve(self, word, next_state):  # 回退一字符，处理保留字，然后读入一字符后转入下一状态
         self.__reserve()
         self.token += word
         self.state = next_state
 
     def __error(self, error_code, error_info=None):  # 处理出错程序
         """
-        :param error_type: 错误类型。0：非法字符，1：冒号不匹配，2：token大于16个字符
+        :param error_code: 错误类型。0：非法字符，1：冒号不匹配，2：token大于16个字符
         :param error_info: 如果错误类型为2，记录过长的token
         :return:
         """
