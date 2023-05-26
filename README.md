@@ -9,7 +9,7 @@
 python main.py
 ```
 
-如果需要其他路径下的源码
+如果需要分析其他路径下的源码
 ```angular2html
 python main.py --file_path your_source_code_path
 ```
